@@ -53,5 +53,10 @@ pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
 /// YOUR JOB: Finish sys_task_info to pass testcases
 pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
     trace!("kernel: sys_task_info");
-    -1
+    unsafe {
+        (*_ti).status = TaskStatus::Running;
+        (*_ti).syscall_times = crate::task::TASK_MANAGER.get_syscall_times();
+        (*_ti).time = crate::timer::get_time_ms() - crate::task::TASK_MANAGER.get_start_time();
+    }
+    0
 }
