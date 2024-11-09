@@ -2,6 +2,7 @@
 
 use super::TaskContext;
 use crate::config::MAX_SYSCALL_NUM;
+use crate::config::MAX_SYSCALL_NUM;
 /// The task control block (TCB) of a task.
 #[derive(Copy, Clone)]
 pub struct TaskControlBlock {

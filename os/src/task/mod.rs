@@ -56,6 +56,8 @@ lazy_static! {
             task_status: TaskStatus::UnInit,
             syscall_times: [0; MAX_SYSCALL_NUM],
             start_time: 0,
+            syscall_times: [0; MAX_SYSCALL_NUM],
+            start_time: 0,
         }; MAX_APP_NUM];
         for (i, task) in tasks.iter_mut().enumerate() {
             task.task_cx = TaskContext::goto_restore(init_app_cx(i));
@@ -82,6 +84,9 @@ impl TaskManager {
         let mut inner = self.inner.exclusive_access();
         let task0 = &mut inner.tasks[0];
         task0.task_status = TaskStatus::Running;
+        if task0.start_time == 0 {
+            task0.start_time = crate::timer::get_time_ms();
+        }
         if task0.start_time == 0 {
             task0.start_time = crate::timer::get_time_ms();
         }
@@ -195,4 +200,28 @@ pub fn suspend_current_and_run_next() {
 pub fn exit_current_and_run_next() {
     mark_current_exited();
     run_next_task();
+}
+/// get current task
+pub fn get_current_task() -> usize {
+    TASK_MANAGER.inner.exclusive_access().current_task
+}
+/// get the start time of current task
+pub fn get_current_time() -> usize {
+    let inner = TASK_MANAGER.inner.exclusive_access();
+    let c = get_current_task();
+    inner.tasks[c].start_time
+}
+
+/// get current task syscall times
+pub fn get_current_syscall_times() -> [u32; MAX_SYSCALL_NUM] {
+    let inner = TASK_MANAGER.inner.exclusive_access();
+    let c = get_current_task();
+    inner.tasks[c].syscall_times
+}
+
+/// accumulate current task syscall times
+pub fn accumulate_syscall_times(syscall_id: usize) {
+    let mut inner = TASK_MANAGER.inner.exclusive_access();
+    let c = get_current_task();
+    inner.tasks[c].syscall_times[syscall_id] += 1;
 }
